@@ -11,6 +11,7 @@ Novel approach to image segmentation: Segnet + hebbian
 - [ ] add documentation
 - [ ] implement multi-threaded data augmentation
 - [ ] pass one image through the network!
+- [ ] add testing ~> max_channels and data_loader.py!
 
 #### Installation (macOS Sierra Version 10.12.1)
 ```
