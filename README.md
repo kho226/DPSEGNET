@@ -1,6 +1,13 @@
 # DPSEGNET
 Novel approach to image segmentation: Segnet + hebbian
 
-#### to - do
-- [] add documentation
+#### [Segnet](https://arxiv.org/abs/1511.00561)
+![alt text](https://saytosid.github.io/images/segnet/Complete%20architecture.png)
+
+#### [Hebbian](https://arxiv.org/abs/1804.02464)
+
+#### To - Do
+- [ ] add documentation
+- [ ] implement multi-threaded data augmentation
+- [ ] pass one image through the network!
 
