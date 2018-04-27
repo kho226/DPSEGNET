@@ -12,3 +12,13 @@ Novel approach to image segmentation: Segnet + hebbian
 - [ ] implement multi-threaded data augmentation
 - [ ] pass one image through the network!
 
+#### Installation (macOS Sierra Version 10.12.1)
+```
+sudo easy_install pip
+sudo pip install virtualenv
+git clone https://github.com/kho226/DPSEGNET
+cd <project_path>
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
