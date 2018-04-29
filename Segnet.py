@@ -18,15 +18,18 @@ class down_block(nn.Module):
         self.num_of_convs = num_of_convs
 
         # Declare operations with learning features
-        self.conv1 = nn.Conv2d(channels[0], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=0, bias=True)
+        self.conv1 = nn.Conv2d(channels[0], channels[1], kernel_size=(3,3), stride=1, padding=1, dilation=1, bias=True)
         self.batchnorm1 = nn.BatchNorm2d(channels[1])
-        self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=0, bias=True)
+
+        self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=1, dilation=1, bias=True)
         self.batchnorm2 = nn.BatchNorm2d(channels[1])
+
         if(num_of_convs == 3):
-            self.conv3 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=0, bias=True)
+            self.conv3 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=1, dilation=1, bias=True)
             self.batchnorm3 = nn.BatchNorm2d(channels[1])
 
         # Declare operations without learning features
+        
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=(2,2), stride=2, return_indices = True)
         
@@ -38,6 +41,7 @@ class down_block(nn.Module):
         input_size = x.size()
         
         fwd_map = self.conv1(x)
+
         fwd_map = self.batchnorm1(fwd_map)
         self.relu(fwd_map)
 
@@ -73,11 +77,11 @@ class up_block(nn.Module):
         self.batchnorm1 = nn.BatchNorm2d(channels[1])
         
         if(num_of_convs== 2):
-            self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=0, bias=True)
+            self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
         elif(num_of_convs == 3):
-            self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=0, bias=True)
+            self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
             self.batchnorm2 = nn.BatchNorm2d(channels[1])
-            self.conv3 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=0, bias=True)
+            self.conv3 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
         
         self.batchnorm_for_last_conv = nn.BatchNorm2d(channels[1])
 
@@ -137,20 +141,32 @@ class network(nn.Module):
         self.layer9 = up_block((128,64), 2)
         self.layer10 = up_block((64,64), 2)
         
-        self.conv1x1 = nn.Conv2d(64, 35, kernel_size=(1,1), stride=1, padding=0, dilation=0, bias=False)
+        self.conv1x1 = nn.Conv2d(64, 35, kernel_size=(1,1), stride=1, padding=0, dilation=1, bias=False)
 
         self.softmax = nn.Softmax()
+
+    def get_max_channels(self,tensor):
+        shape               = tensor.size()
+        try:
+            vals, indeces   = torch.max(tensor,2)
+            num_rows        = shape[0]
+            num_columns     = shape[1]
+            ret             = np.array(indeces)
+            ret             = ret.reshape(num_rows,num_columns,1)
+            return ret
+        except Exception as err:
+            return err
 
     def forward(self,x):
 
         print("\nLayer1...")
-        out1, indices1, size1= self.layer1(x)
+        out1, indices1, size1 = self.layer1(x)
         print(out1.size())
         print("\nLayer2...")
         out2, indices2, size2 = self.layer2(out1)
         print(out2.size())
         print("\nLayer3...")
-        out3, indices3, size3= self.layer3(out2)
+        out3, indices3, size3 = self.layer3(out2)
         print(out3.size())
         print("\nLayer4...")
         out4, indices4,size4 = self.layer4(out3)
@@ -183,6 +199,5 @@ class network(nn.Module):
         print("\nSoftmax Layer...")
         #res = Funct.softmax(out10)
         res = self.softmax(out_conv1x1, dim=2)
-        print(res.size())
-        return res
+        return get_max_channels(res)
 
