@@ -6,6 +6,7 @@ import os
 import numpy as np
 import torchvision.utils as vutils
 import math
+from torch.autograd import Variable
 # import torch.nn.functional as Funct
 
 
@@ -18,18 +19,18 @@ class down_block(nn.Module):
         self.num_of_convs = num_of_convs
 
         # Declare operations with learning features
-        self.conv1 = nn.Conv2d(channels[0], channels[1], kernel_size=(3,3), stride=1, padding=1, dilation=1, bias=True)
+        self.conv1 = nn.Conv2d(channels[0], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
         self.batchnorm1 = nn.BatchNorm2d(channels[1])
 
-        self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=1, dilation=1, bias=True)
+        self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
         self.batchnorm2 = nn.BatchNorm2d(channels[1])
 
         if(num_of_convs == 3):
-            self.conv3 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=1, dilation=1, bias=True)
+            self.conv3 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
             self.batchnorm3 = nn.BatchNorm2d(channels[1])
 
         # Declare operations without learning features
-        
+
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=(2,2), stride=2, return_indices = True)
         
@@ -71,17 +72,20 @@ class up_block(nn.Module):
         self.num_of_convs = num_of_convs
         
         self.unpooled = nn.MaxUnpool2d(kernel_size=(2,2) , stride=2)
-        self.upsample = nn.Upsample(mode="bilinear")
 
-        self.conv1 = nn.Conv2d(channels[0], channels[1], kernel_size=(3,3), stride=1, padding=1, dilation=1, bias=True)
+        
+        #self.upsample = nn.Upsample(mode="bilinear")
+
+        self.conv1 = nn.Conv2d(channels[0], channels[1], kernel_size=(3,3), stride=1, padding=2, dilation=1, bias=False)
         self.batchnorm1 = nn.BatchNorm2d(channels[1])
         
         if(num_of_convs== 2):
-            self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
+            self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=2, dilation=1, bias=False)
+
         elif(num_of_convs == 3):
-            self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
+            self.conv2 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=2, dilation=1, bias=False)
             self.batchnorm2 = nn.BatchNorm2d(channels[1])
-            self.conv3 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=0, dilation=1, bias=True)
+            self.conv3 = nn.Conv2d(channels[1], channels[1], kernel_size=(3,3), stride=1, padding=2, dilation=1, bias=False)
         
         self.batchnorm_for_last_conv = nn.BatchNorm2d(channels[1])
 
@@ -100,7 +104,7 @@ class up_block(nn.Module):
 
         #print("Before upsampling: ", x.size())
         fwd_map = self.unpooled(x, indices, output_size=size)
-        fwd_map = self.upsample(fwd_map)
+        #fwd_map = self.upsample(fwd_map)
         
         fwd_map = self.conv1(fwd_map)
         fwd_map = self.batchnorm1(fwd_map)
@@ -132,10 +136,10 @@ class network(nn.Module):
         self.layer2 = down_block((64,128), 2)
         self.layer3 = down_block((128,256), 3)
         self.layer4 = down_block((256,512), 3)
-        self.layer5 = down_block((512,1024), 3)
+        #self.layer5 = down_block((512,1024), 3)
         
         #self.layer6 = up_block((inp,curr,next), 3)
-        self.layer6 = up_block((512,1024), 3)
+        #self.layer6 = up_block((1024,512), 3)
         self.layer7 = up_block((512,256), 3)
         self.layer8 = up_block((256,128), 3)
         self.layer9 = up_block((128,64), 2)
@@ -143,17 +147,21 @@ class network(nn.Module):
         
         self.conv1x1 = nn.Conv2d(64, 35, kernel_size=(1,1), stride=1, padding=0, dilation=1, bias=False)
 
-        self.softmax = nn.Softmax()
+        #self.softmax = nn.Softmax(dim=2)
+        self.softmax = nn.Softmax(dim=1)
 
-    def get_max_channels(self,tensor):
-        shape               = tensor.size()
+    def get_max_channels(self,tensor):    
         try:
-            vals, indeces   = torch.max(tensor,2)
-            num_rows        = shape[0]
-            num_columns     = shape[1]
-            ret             = np.array(indeces)
-            ret             = ret.reshape(num_rows,num_columns,1)
-            return ret
+            #get max values, indeces along channels
+            vals, indeces   = torch.max(tensor,1)
+            #cast to numpy array
+            tmp             = indeces.data.numpy()
+            #reshape
+            ret             = np.reshape(tmp, (tmp.shape[0],1,tmp.shape[1],tmp.shape[2]))
+            #add one because class labels are not zero indexed
+            ret += 1
+            #cast back to Autograd.Variable and return
+            return Variable(torch.from_numpy(ret), requires_grad = False)
         except Exception as err:
             return err
 
@@ -171,15 +179,15 @@ class network(nn.Module):
         print("\nLayer4...")
         out4, indices4,size4 = self.layer4(out3)
         print(out4.size())
-        print("\nLayer5...")
-        out5, indices5, size5 = self.layer5(out4)
-        print(out5.size())
+        #print("\nLayer5...")
+        #out5, indices5, size5 = self.layer5(out4)
+        #print(out5.size())
 
-        print("\nLayer6...")
-        out6 = self.layer6(out5, indices5, size5['b4max'])
-        print(out6.size())
+        #print("\nLayer6...")
+        #out6 = self.layer6(out5, indices5, size5['b4max'])
+        #print(out6.size())
         print("\nLayer7...")
-        out7 = self.layer7(out6, indices4, size4['b4max'])
+        out7 = self.layer7(out4, indices4, size4['b4max'])
         print(out7.size())
         print("\nLayer8...")
         out8 = self.layer8(out7, indices3, size3['b4max'])
@@ -198,6 +206,8 @@ class network(nn.Module):
         
         print("\nSoftmax Layer...")
         #res = Funct.softmax(out10)
-        res = self.softmax(out_conv1x1, dim=2)
-        return get_max_channels(res)
+        res = self.get_max_channels(self.softmax(out_conv1x1))
+
+        return res
+        #return get_max_channels(res)
 
