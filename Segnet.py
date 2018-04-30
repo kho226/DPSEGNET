@@ -161,7 +161,7 @@ class network(nn.Module):
             #add one because class labels are not zero indexed
             ret += 1
             #cast back to Autograd.Variable and return
-            return Variable(torch.from_numpy(ret), requires_grad = False)
+            return Variable(torch.from_numpy(ret), requires_grad = True)
         except Exception as err:
             return err
 
