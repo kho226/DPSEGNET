@@ -7,8 +7,8 @@ Novel approach to image segmentation: Segnet + hebbian + u-net
 #### [Hebbian](https://arxiv.org/abs/1804.02464)
 ![alt text](https://github.com/kho226/DPSEGNET/blob/master/images/hebbian.png)
 
-#### [U-Net] (https://arxiv.org/abs/1505.04597)
-![alt text](https://github.com/DPSEGNET/blob/master/images/u-net-architecture.png)
+#### [U-Net](https://arxiv.org/abs/1505.04597)
+![alt text](https://github.com/kho226/DPSEGNET/blob/master/images/u-net-architecture.png)
 
 #### To - Do
 - [ ] add documentation
