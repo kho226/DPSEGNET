@@ -1,11 +1,14 @@
 # DPSEGNET
-Novel approach to image segmentation: Segnet + hebbian
+Novel approach to image segmentation: Segnet + hebbian + u-net
 
 #### [Segnet](https://arxiv.org/abs/1511.00561)
 ![alt text](https://saytosid.github.io/images/segnet/Complete%20architecture.png)
 
 #### [Hebbian](https://arxiv.org/abs/1804.02464)
 ![alt text](https://github.com/kho226/DPSEGNET/blob/master/images/hebbian.png)
+
+#### [U-Net] (https://arxiv.org/abs/1505.04597)
+![alt text](https://github.com/DPSEGNET/blob/master/images/u-net-architecture.png)
 
 #### To - Do
 - [ ] add documentation
