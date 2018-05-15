@@ -16,8 +16,6 @@ class data_loader_seg(Dataset):
         self.files = [fn for fn in os.listdir(root_dir + 'original/') if fn.endswith('.png')]
         self.trans = trans 
         self.c2id = c2id
-        # to  - do ~> implement multi-threaded processing
-        #self.pool = mp.Pool(processes=num_processes)
 
     def __len__(self):
         return len(self.files)
@@ -33,13 +31,12 @@ class data_loader_seg(Dataset):
         s = kitti_image_label_IDfied.shape
         kitti_image_label_IDfied = kitti_image_label_IDfied.reshape((s[0], s[1], 1))
 
-
         return kitti_image_label_IDfied
 
     def __getitem__(self,idx):
         image = Image.open(self.root_dir + 'original/' + self.files[idx])
         image_seg = Image.open(self.root_dir + 'segmented/' + self.files[idx])
-        image_seg_idfy = self.IDfy(image_seg)
+             
         # THIS PART PRE-PROCESSES THE LABELED IMAGE FOR A BINARY SEGMENTATION (Remove when segmenting more than 2)
         # image_seg = image_seg.convert('L')
         #image_seg = image_seg.resize((388,388))
@@ -49,29 +46,29 @@ class data_loader_seg(Dataset):
         # image_seg = Image.fromarray(image_seg.astype('uint8'))
         
         # image_seg_idfy = Image.fromarray(image_seg_idfy)
-
-
+    
         if self.trans:
             image = self.trans(image)
-            image_seg_idfy = self.trans(image_seg_idfy)
+            image_seg = self.trans(image_seg_idfy)
         
         image = np.array(image)
+        image_seg_idfy = self.IDfy(image_seg)
 
-        #print("This is the image shape: {}".format(image.shape))
-        #print("this is the segmented image shape: {}".format(image_seg_idfy.shape))
+        image = image.reshape((image.shape[2], 
+                               image.shape[0], 
+                               image.shape[1]))
 
-        image = image.reshape((3,image.shape[0],image.shape[1]))
-        image_seg_idfy = image_seg_idfy.reshape((1,image_seg_idfy.shape[0],image_seg_idfy.shape[1]))
+        image_seg_idfy = image_seg_idfy.reshape((image_seg_idfy.shape[2], 
+                                                 image_seg_idfy.shape[0], 
+                                                 image_seg_idfy.shape[1]))
 
-        image = image[:, :350 , :1230]
-        image_seg_idfy = image_seg_idfy[:, : 350 , :1230]
-
+        image          = image[:, :350 , :1230]
+        image_seg_idfy = image_seg_idfy[:, :350 , :1230]
+        
         image = torch.from_numpy(image).float()
         image_seg_idfy = torch.from_numpy(image_seg_idfy).float()
-
-
-        #print("image shape ~> {}".format(image.shape))
-        #print("image_seg_idfy shape ~> {}".format(image_seg_idfy.shape))
-
-
+        
+        # print(type(image))
+        # print(type(image_seg_idfy))
+        
         return {'image': image, 'image_seg': image_seg_idfy}
