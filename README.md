@@ -11,11 +11,11 @@ Novel approach to image segmentation: Segnet + hebbian + u-net
 ![alt text](https://github.com/kho226/DPSEGNET/blob/master/images/u-net-architecture.png)
 
 #### To - Do
-- [ x ] add documentation
-- [ x ] implement multi-threaded data augmentation
-- [ x ] pass one image through the network!
-- [ x ] add testing ~> max_channels and data_loader.py!
-- [ x ] implement warm start
+- [ ] add documentation
+- [ ] implement multi-threaded data augmentation
+- [ ] pass one image through the network!
+- [ ] add testing ~> max_channels and data_loader.py!
+- [ ] implement warm start
 - [ ] only support batch_size = 1
 - [ ] metrics ~> IOU, precision, recall
 - [ ] plasticity
